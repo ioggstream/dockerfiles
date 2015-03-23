@@ -1,0 +1,7 @@
+ldaptls:
+  image: 389:tls
+  hostname: ldap.docker
+  volumes:
+    - ./:/code
+  entrypoint: /entrypoint.sh
+

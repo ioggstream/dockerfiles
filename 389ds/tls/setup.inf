@@ -1,0 +1,17 @@
+[General]
+SuiteSpotUserID= nobody
+SuiteSpotGroup= nobody
+AdminDomain= localhost
+ConfigDirectoryAdminID= admin
+ConfigDirectoryAdminPwd= password
+FullMachineName= localhost.localdomain
+
+
+[slapd]
+ServerPort= 389
+RootDN= cn=directory manager
+RootDNPwd= password
+Suffix= dc=babel,dc=it
+SlapdConfigForMC= Yes
+UseExistingMC= 0 
+
