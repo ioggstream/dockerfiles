@@ -1,0 +1,12 @@
+#
+# Postfix using an ldap map with tls
+#
+ldaptls:
+  image: 389:tls
+  hostname: ldaptls.docker
+
+postfixtls:
+  build: .
+  volumes-from: ldaptls
+  volumes:
+    - ./:/code

@@ -3,12 +3,15 @@
 # - set 
 # - import into certdb: CACert, ServerCert, UserCert
 set -e
-ROOT_DN="cn=directory manager"
-ROOT_PASS="password"
-INIT_LDIF="todo.ldif"
-CERT_CA="CA certificate"
-CERT_CA_SN="cn=CAcert"
-CERT_SERVER="Server-Cert"
+:   ${ROOT_DN:="cn=directory manager"} 
+:   ${ROOT_PASS:="password"} 
+:   ${SUFFIX:="dc=babel,dc=it"}
+:   ${INIT_LDIF:="todo.ldif"} 
+:   ${CERT_CA:="CA certificate"} 
+:   ${CERT_CA_SN:="cn=CAcert"} 
+:   ${CERT_SERVER:="Server-Cert"} 
+
+# Evaluated variables
 HOSTNAME=$(hostname)
 CERT_SERVER_SN="cn=$HOSTNAME"
 BASEDIR="/etc/dirsrv/slapd-$(hostname -s)"
@@ -17,7 +20,7 @@ CERT_CLIENT="cn=r"
 DOMAINNAME=$(dnsdomainname)
 
 # Validate configuration variables
-: ${DOMAINNAME:?Missing domain name}
+: ${DOMAINNAME:?Missing dnsdomainname name. Run with --hostname=myhost.mydomain}
 
 #
 # Utilities
@@ -29,15 +32,42 @@ log(){
 #
 # functions for setup
 #
-my_certutil(){
-    certutil -d ${BASEDIR} -f ${BASEDIR}/pwdfile.txt -z ${BASEDIR}/noise.txt $@
-    }
 patch_disable_selinux_systemd(){
+    # remove /usr/lib/systemd/system from container
+    #  as it was added by 389-ds.rpm
     rm -fr /usr/lib/systemd/system;
+    # We don't need SELinux and we aren't going to start the server
+    #  after the installation
     sed -i 's/updateSelinuxPolicy($inf);//g' /usr/lib64/dirsrv/perl/*
     sed -i '/if (@errs = startServer($inf))/,/}/d' /usr/lib64/dirsrv/perl/*
     }
+create_setup_inf(){
+    cat > /setup.$HOSTNAME.inf <<-EOF
+    [General]
+SuiteSpotUserID= nobody
+SuiteSpotGroup= nobody
+AdminDomain= localhost
+ConfigDirectoryAdminID= admin
+ConfigDirectoryAdminPwd= $ROOT_PASS
+FullMachineName= $HOSTNAME
 
+
+[slapd]
+ServerPort= 389
+RootDN= $ROOT_DN
+RootDNPwd= $ROOT_PASS
+Suffix= $SUFFIX
+SlapdConfigForMC= Yes
+UseExistingMC= 0 
+EOF
+    }
+#
+# Certificate creation and export
+#
+my_certutil(){
+    # localize to ldap instance basedir
+    certutil -d ${BASEDIR} -f ${BASEDIR}/pwdfile.txt -z ${BASEDIR}/noise.txt $@
+    }
 create_cacert(){
     # Create a CA-Cert, answering Yes to the first and last question
     echo -e "y\n\ny\n"|\
@@ -53,15 +83,18 @@ create_trusted_cert(){
     my_certutil -S -n "${name}" -s "${sn}" -c "$CERT_CA" -t "u,u,u" -m "${serial_no}" -v 120
     }
 export_keycert_to_pem(){
+    # Export a certificate and the key in an unencrypted
+    #  .pem file
     local certname="$1"
     pk12util -d "$BASEDIR"  -n "NSS Certificate DB:${certname}" -o /dev/stdout -w ${BASEDIR}/pwdfile.txt | \
         openssl pkcs12  -nodes -clcerts -out "${certname}.pem" -password file:${BASEDIR}/pwdfile.txt
     }
 export_cert_to_pem(){
+    # Export a cerificate only to a pem file
+    #
     local certname="$1"
     my_certutil -L  -n "${certname}" 
     }
-
 export_cert_to_ldif(){
     local certname="$1"
     my_certutil -L -n "${certname}" -a | python -c '
@@ -74,6 +107,9 @@ for i, x in enumerate(sys.stdin.readlines()):
 '
 }
 
+#
+# Installation and configuration
+#
 install(){  
     log "Installing 389 without SELinux and SystemD with basedir $BASEDIR"
     # Prepare for setup
@@ -97,7 +133,7 @@ babel.it:verifycert     on
 
 setup_certificates(){
     # 
-    # Create certs: move to entrypoint.sh
+    # Create certs
     #
     mkdir -p /etc/openldap/cacerts/
     (cd $BASEDIR && {
@@ -124,7 +160,7 @@ setup_ssl(){
     #
     ns-slapd -D $BASEDIR && sleep 3
 
-    ldapmodify -x -D"cn=directory manager" -wpassword <<-EOF
+    ldapmodify -x -D"$ROOT_DN" -w$ROOT_PASS <<-EOF
 dn: cn=encryption,cn=config
 changetype: modify
 replace: nsSSL3
@@ -165,7 +201,7 @@ setup_tlsuser(){
 create_trusted_cert "cn=r" "cn=r,o=babel,c=it"
 export_keycert_to_pem "cn=r"
 
-ldapadd -x  -D"cn=directory manager" -wpassword <<-EOF
+ldapadd -x  -D"$ROOT_DN" -w$ROOT_PASS <<-EOF
 dn: cn=r,dc=babel,dc=it
 cn: bind dn pseudo user
 objectclass: top
@@ -212,11 +248,14 @@ case "$1" in
         test
         ;;
     *)
-        install
-        setup_certificates
-        setup_ssl
-        setup_tlsuser
-        restart
+        if [ ! -d "$BASEDIR" ]; then
+            install
+            setup_certificates
+            setup_ssl
+            setup_tlsuser
+            restart
+        fi
+
         test
         tail -F $LOGDIR/{access,errors} --max-unchanged-stats=5
         ;;

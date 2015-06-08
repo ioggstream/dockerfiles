@@ -1,0 +1,28 @@
+#
+# logstash configuration
+#
+# - stdio.conf
+# - elasticsearch.conf
+
+logstash:
+    image:  logstash
+    hostname: ls
+    links:
+        - elasticsearch
+    volumes:
+        - ./:/code
+        - logstash:/config-dir
+    command: logstash -f /config-dir/elasticsearch.conf
+    
+#
+# image using volumes
+# - datastore: /usr/share/elasticsearch/data 
+# - config: /usr/share/elasticsearch/config
+# command: elasticsearch -Des.node.name="TestNode"
+# exposed ports: 9200, 9300
+elasticsearch:
+    image:  elasticsearch
+    hostname: es
+    volumes:
+        - ./:/code
+        

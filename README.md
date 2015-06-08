@@ -16,3 +16,9 @@ You can manipulate certificates connecting to the
 machine volume /etc/dirsrv/slapd-$hostname
 
     #certutil -d /etc/dirsrv/slapd-$hostname -L
+
+
+## postfix with TLS
+
+
+## Logstash, Elasticsearch
