@@ -9,14 +9,16 @@ logstash:
     hostname: ls
     links:
         - elasticsearch
+    ports:
+        - "18080:18080"
     volumes:
         - ./:/code
         - logstash:/config-dir
     command: logstash --debug -f /config-dir/elasticsearch.conf
-    
+
 #
 # image using volumes
-# - datastore: /usr/share/elasticsearch/data 
+# - datastore: /usr/share/elasticsearch/data
 # - config: /usr/share/elasticsearch/config
 # command: elasticsearch -Des.node.name="TestNode"
 # exposed ports: 9200, 9300
@@ -24,8 +26,23 @@ elasticsearch:
     image:  elasticsearch
     privileged: true
     hostname: es
+    ports:
+        - "9200:9200"
+        - "9300:9300"
     volumes:
         - ./:/code
         - elasticsearch:/usr/share/elasticsearch/config
     command: elasticsearch
-        
+
+#
+# Kibana connecting to elasticsearch.
+#
+kibana:
+    image: kibana
+    hostname: kb
+    ports:
+        - "5601:5601"
+    links:
+        - elasticsearch
+    environment:
+        - ELASTICSEARCH_URL=http://elasticsearch:9200
