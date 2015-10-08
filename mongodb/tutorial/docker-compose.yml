@@ -44,4 +44,18 @@ shard:
     # - ./mongorc.js:/root/.mongorc.js
   command: --replSet rs --smallfiles --oplogSize 10 --nojournal --noprealloc
 
+configs:
+  image: mongo
+  volumes:
+    - .:/code
+    - /data/db
+  command: --configsvr --dbpath=/data/db --smallfiles --nojournal --noprealloc
 
+routers:
+  image: mongo
+  volumes:
+    - .:/code
+    - /data/db
+  entrypoint: /usr/bin/mongos
+  command: --configdb tutorial_configs_1,tutorial_configs_2,tutorial_configs_3
+    
