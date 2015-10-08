@@ -1,0 +1,28 @@
+# A standalone container. Datadir is shared with local disk.
+m:
+  image: mongo
+  volumes:
+    - ./db-1:/data/db
+    - .:/code
+
+# A replicaset container. To reduce disk usage
+#  - set smallfiles 
+#  - set oplogSize 
+# Apply configuration only on the master, and it 
+#  will push it to all slaves.
+# To read from secondary, set SESSION parameter 
+#   - db.setSlaveOK()
+dc1:
+  image: mongo
+  volumes:
+    - .:/code
+    - /data/db
+  command: --replSet rs --smallfiles --oplogSize 200
+
+
+dc2:
+  image: mongo
+  volumes:
+    - .:/code
+    - /data/db
+  command: --replSet rs --smallfiles --oplogSize 200
