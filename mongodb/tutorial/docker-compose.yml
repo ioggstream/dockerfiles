@@ -4,6 +4,7 @@ m:
   volumes:
     - ./db-1:/data/db
     - .:/code
+    - ./mongorc.js:/root/.mongorc.js
 
 # A replicaset container. To reduce disk usage
 #  - set smallfiles 
@@ -17,6 +18,7 @@ dc1:
   volumes:
     - .:/code
     - /data/db
+    - ./mongorc.js:/root/.mongorc.js
   command: --replSet rs --smallfiles --oplogSize 200
 
 
@@ -25,4 +27,21 @@ dc2:
   volumes:
     - .:/code
     - /data/db
+    - ./mongorc.js:/root/.mongorc.js
   command: --replSet rs --smallfiles --oplogSize 200
+
+
+# A Sharded container.
+#  - mongos: routes queries and resides on appserv nodes.
+#  - configs: pushes shard status and settings on mongos
+#  - shards: storage layer
+# 
+shard: 
+  image: mongo
+  volumes:
+    - .:/code
+    - /data/db
+    # - ./mongorc.js:/root/.mongorc.js
+  command: --replSet rs --smallfiles --oplogSize 10 --nojournal --noprealloc
+
+
