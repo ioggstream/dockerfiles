@@ -1,0 +1,18 @@
+// replica set name MUST match the mongod instance specified in the command line
+// hidden node MUST have priority: 0 set
+// arbiters cannot be tagged
+// initial configuration can only be applied on master
+// to read on secondary, set slaveOk()
+conf = {
+        _id: "rs",
+        members: [
+                {_id: 0, host: 'tutorial_dc1_1', priority: 5},
+                {_id: 1, host: 'tutorial_dc1_2', priority: 5},
+                {_id: 2, host: 'tutorial_dc1_3', priority:0, hidden: true},
+                {_id: 10, host: 'tutorial_dc2_1'}, 
+                {_id: 11, host: 'tutorial_dc2_2', priority: 0, hidden: true, slaveDelay: 7200},
+
+                        
+        ]
+}
+rs.initiate(conf)
