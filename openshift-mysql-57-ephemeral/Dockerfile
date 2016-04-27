@@ -15,4 +15,3 @@ COPY docker-entrypoint.sh /usr/local/bin/
 
 USER 27
 ENTRYPOINT /usr/local/bin/docker-entrypoint.sh
-CMD mysqld --datadir=/data/mysql --socket=/data/mysql/mysql.sock --pid-file=/data/mysql/mysql.pid 
