@@ -8,6 +8,9 @@ RUN apt-get -y update && \
 RUN go get github.com/google/mtail || \
 	cd /go/src/github.com/google/mtail && make 
 
+RUN rm /go/src -fr && apt-get remove git
+
+
 
 ENTRYPOINT /go/bin/mtail
 
