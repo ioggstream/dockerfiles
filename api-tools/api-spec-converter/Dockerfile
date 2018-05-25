@@ -2,7 +2,7 @@
 # Image to run various api tools based on
 #  node and python.
 #
-FROM node:9
+FROM node:10
 LABEL maintainer="robipolli@gmail.com"
 
 # Install python-yaml.
