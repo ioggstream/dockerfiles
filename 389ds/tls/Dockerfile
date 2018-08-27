@@ -19,5 +19,5 @@ VOLUME /var/log/dirsrv
 COPY setup.inf /setup.inf
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-ENTRYPOINT /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 COPY Dockerfile /Dockerfile
