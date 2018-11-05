@@ -1,0 +1,10 @@
+version: "3.0"
+
+services:
+  gluster:
+    image: gluster/gluster-centos
+    
+  centos7:
+    image: centos:7
+    command: /bin/tail -f /etc/hosts
+    privileged: true

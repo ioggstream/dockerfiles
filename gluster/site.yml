@@ -1,0 +1,23 @@
+- hosts: all
+  tasks:
+        - name: install gluster
+          yum: 
+            name:
+                  -  centos-release-gluster41
+        - name: install gluster
+          yum: 
+            name:
+                  - glusterfs 
+                    # - gluster-cli 
+                  -  glusterfs-libs 
+                  -  glusterfs-server 
+
+        - name: create volumes
+          file:
+                  path: /data/brick1/gv0
+                  state: directory
+
+        - name: run gluster
+          shell: |-
+                  glusterd &
+

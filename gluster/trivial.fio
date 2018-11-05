@@ -1,0 +1,9 @@
+[global]
+ioengine=sync
+rw=readwrite
+direct=1
+size=100m
+directory=/mnt/fio
+thread=8
+
+[trivial-readwrite-500k]
